@@ -15,16 +15,34 @@ Future<List> fetchProducts() async {
   );
 
   if (response.statusCode == 200) {
-    // If the server did return a 200 OK response,
-    // then parse the JSON.
-    /*var productArray = new List(30);
+
+    var productArray = [];
+    final body = jsonDecode(response.body);
 
     for (var i = 0; i < 30; i++) {
-      productArray.add(response.body)
-    }*/
+      var product = Product(
+          productId: (body["products"][i]["productId"] == null) ? "" : body["products"][i]["productId"],
+          productNumber: (body["products"][i]["productNumbe"] == null) ? "" : body["products"][i]["productNumbe"],
+          productNameBold: (body["products"][i]["productNameBold"] == null) ? "" : body["products"][i]["productNameBold"],
+          productNameThin: (body["products"][i]["productNameThin"] == null) ? "" : body["products"][i]["productNameThin"],
+          producerName: (body["products"][i]["producerName"] == null) ? "" : body["products"][i]["producerName"],
+          alcoholPercentage: (body["products"][i]["alcoholPercentage"] == null) ? 0.0 : body["products"][i]["alcoholPercentage"],
+          volume: (body["products"][i]["volume"] == null) ? 0.0 : body["products"][i]["volume"],
+          price: (body["products"][i]["price"] == null) ? 0.0 : body["products"][i]["price"],
+          country: (body["products"][i]["country"] == null) ? "" : body["products"][i]["country"],
+          categoryLevel1: (body["products"][i]["categoryLevel1"] == null) ? "" : body["products"][i]["categoryLevel1"],
+          categoryLevel2: (body["products"][i]["categoryLevel2"] == null) ? "" : body["products"][i]["categoryLevel2"],
+          categoryLevel3: (body["products"][i]["categoryLevel3"] == null) ? "" : body["products"][i]["categoryLevel3"],
+          categoryLevel4: (body["products"][i]["categoryLevel4"] == null) ? "" : body["products"][i]["categoryLevel4"],
+          apk: (body["products"][i]["volume"] == null || body["products"][i]["alcoholPercentage"] == null || body["products"][i]["price"] == null) ? 0.0 : body["products"][i]["volume"] * body["products"][i]["alcoholPercentage"] / (body["products"][i]["price"] * 100),
+      );
 
-    print("Hello World!");
-    print(response.body.runtimeType);
+      productArray.add(product);
+
+      print(productArray[15]);
+    }
+
+    //print(body["products"][0]["productId"]);
 
 
     return [];
@@ -41,15 +59,15 @@ class Product {
   final String productNameBold;
   final String productNameThin;
   final String producerName;
-  final Float alcoholPercentage;
-  final Float volume;
-  final Float price;
+  final double alcoholPercentage;
+  final double volume;
+  final double price;
   final String country;
   final String categoryLevel1;
   final String categoryLevel2;
   final String categoryLevel3;
   final String categoryLevel4;
-  final Float apk;
+  final double apk;
 
   const Product({
     required this.productId,
@@ -68,25 +86,6 @@ class Product {
     required this.apk,
 
   });
-
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
-      productId: json['productId'],
-      productNumber: json['productNumber'],
-      productNameBold: json['productNameBold'],
-      productNameThin: json['productNameThin'],
-      producerName: json['producerName'],
-      alcoholPercentage: json['alcoholPercentage'],
-      volume: json['volume'],
-      price: json['price'],
-      country: json['country'],
-      categoryLevel1: json['categoryLevel1'],
-      categoryLevel2: json['categoryLevel2'],
-      categoryLevel3: json['categoryLevel3'],
-      categoryLevel4: json['categoryLevel4'],
-      apk: json['volume'] * json['alcoholPercentage'] / (json['price'] * 100),
-    );
-  }
 }
 
 void main() => runApp(const MyApp());
