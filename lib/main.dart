@@ -1,61 +1,16 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
-
-Future<List> fetchProducts() async {
-  var uri = Uri.parse('https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?');
-
-  final response = await http.get(uri, headers: {
-      'Ocp-Apim-Subscription-Key': 'cfc702aed3094c86b92d6d4ff7a54c84'
-    },
-  );
-
-  if (response.statusCode == 200) {
-
-    var productArray = [];
-    final body = jsonDecode(response.body);
-
-    for (var i = 0; i < 30; i++) {
-      var product = Product(
-          productId: (body["products"][i]["productId"] == null) ? "" : body["products"][i]["productId"],
-          productNumber: (body["products"][i]["productNumbe"] == null) ? "" : body["products"][i]["productNumbe"],
-          productNameBold: (body["products"][i]["productNameBold"] == null) ? "" : body["products"][i]["productNameBold"],
-          productNameThin: (body["products"][i]["productNameThin"] == null) ? "" : body["products"][i]["productNameThin"],
-          producerName: (body["products"][i]["producerName"] == null) ? "" : body["products"][i]["producerName"],
-          alcoholPercentage: (body["products"][i]["alcoholPercentage"] == null) ? 0.0 : body["products"][i]["alcoholPercentage"],
-          volume: (body["products"][i]["volume"] == null) ? 0.0 : body["products"][i]["volume"],
-          price: (body["products"][i]["price"] == null) ? 0.0 : body["products"][i]["price"],
-          country: (body["products"][i]["country"] == null) ? "" : body["products"][i]["country"],
-          categoryLevel1: (body["products"][i]["categoryLevel1"] == null) ? "" : body["products"][i]["categoryLevel1"],
-          categoryLevel2: (body["products"][i]["categoryLevel2"] == null) ? "" : body["products"][i]["categoryLevel2"],
-          categoryLevel3: (body["products"][i]["categoryLevel3"] == null) ? "" : body["products"][i]["categoryLevel3"],
-          categoryLevel4: (body["products"][i]["categoryLevel4"] == null) ? "" : body["products"][i]["categoryLevel4"],
-          apk: (body["products"][i]["volume"] == null || body["products"][i]["alcoholPercentage"] == null || body["products"][i]["price"] == null) ? 0.0 : body["products"][i]["volume"] * body["products"][i]["alcoholPercentage"] / (body["products"][i]["price"] * 100),
-      );
-
-      productArray.add(product);
-
-      print(productArray[15]);
-    }
-
-    //print(body["products"][0]["productId"]);
-
-
-    return [];
-  } else {
-    // If the server did not return a 200 OK response,
-    // then throw an exception.
-    throw Exception('Failed to load album');
-  }
-}
 
 class Product {
-  final String productId;
-  final String productNumber;
+  final int productId;
+  final int productNumber;
   final String productNameBold;
   final String productNameThin;
   final String producerName;
@@ -86,52 +41,171 @@ class Product {
     required this.apk,
 
   });
-}
 
-void main() => runApp(const MyApp());
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  late Future<List> futureProducts;
-
-  @override
-  void initState() {
-    super.initState();
-    futureProducts = fetchProducts();
+  Map<String, dynamic> toMap() {
+    return {
+      'productId': productId,
+      'productNumber': productNumber,
+      'productNameBold': productNameBold,
+      'productNameThin': productNameThin,
+      'producerName': producerName,
+      'alcoholPercentage': alcoholPercentage,
+      'volume': volume,
+      'price': price,
+      'country': country,
+      'categoryLevel1': categoryLevel1,
+      'categoryLevel2': categoryLevel2,
+      'categoryLevel3': categoryLevel3,
+      'categoryLevel4': categoryLevel4,
+      'apk': apk,
+    };
   }
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fetch Data Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Fetch Data Example'),
-        ),
-        body: Center(
-          /*child: FutureBuilder<Product>(
-            future: futureAlbum,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Text(snapshot.data!.productNameBold);
-              } else if (snapshot.hasError) {
-                return Text('${snapshot.error}');
-              }
+  String toString() {
+    return 'Product{productI: $productId, productNumber: $productNumber, productNameBold: $productNameBold, productNameThin: $productNameThin, producerName: $producerName, alcoholPercentage: $alcoholPercentage, volume: $volume, price: $price, country: $country, categoryLevel1: $categoryLevel1, categoryLevel2: $categoryLevel2, categoryLevel3: $categoryLevel3, categoryLevel4: $categoryLevel4, apk: $apk}';
+  }
+}
 
-              // By default, show a loading spinner.
-              return const CircularProgressIndicator();
-            },
-          ),*/
-        ),
+Future<List> fetchProducts() async {
+  var uri = Uri.parse('https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?');
+
+  final response = await http.get(uri, headers: {
+      'Ocp-Apim-Subscription-Key': 'cfc702aed3094c86b92d6d4ff7a54c84'
+    },
+  );
+
+  if (response.statusCode == 200) {
+
+    var productArray = [];
+    final body = jsonDecode(response.body);
+
+    for (var i = 0; i < 30; i++) {
+
+      Product product = Product(
+          productId: (body["products"][i]["productId"] == null) ? 0 : int.parse(body["products"][i]["productId"]),
+          productNumber: (body["products"][i]["productNumber"] == null) ? 0 : int.parse(body["products"][i]["productNumber"]),
+          productNameBold: (body["products"][i]["productNameBold"] == null) ? "" : body["products"][i]["productNameBold"],
+          productNameThin: (body["products"][i]["productNameThin"] == null) ? "" : body["products"][i]["productNameThin"],
+          producerName: (body["products"][i]["producerName"] == null) ? "" : body["products"][i]["producerName"],
+          alcoholPercentage: (body["products"][i]["alcoholPercentage"] == null) ? 0.0 : body["products"][i]["alcoholPercentage"],
+          volume: (body["products"][i]["volume"] == null) ? 0.0 : body["products"][i]["volume"],
+          price: (body["products"][i]["price"] == null) ? 0.0 : body["products"][i]["price"],
+          country: (body["products"][i]["country"] == null) ? "" : body["products"][i]["country"],
+          categoryLevel1: (body["products"][i]["categoryLevel1"] == null) ? "" : body["products"][i]["categoryLevel1"],
+          categoryLevel2: (body["products"][i]["categoryLevel2"] == null) ? "" : body["products"][i]["categoryLevel2"],
+          categoryLevel3: (body["products"][i]["categoryLevel3"] == null) ? "" : body["products"][i]["categoryLevel3"],
+          categoryLevel4: (body["products"][i]["categoryLevel4"] == null) ? "" : body["products"][i]["categoryLevel4"],
+          apk: (body["products"][i]["volume"] == null || body["products"][i]["alcoholPercentage"] == null || body["products"][i]["price"] == null) ? 0.0 : body["products"][i]["volume"] * body["products"][i]["alcoholPercentage"] / (body["products"][i]["price"] * 100),
+      );
+
+      productArray.add(product);
+
+    }
+
+
+    return productArray;
+  } else {
+    // If the server did not return a 200 OK response,
+    // then throw an exception.
+    throw Exception('Failed to load album');
+  }
+}
+
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final database = openDatabase(
+    join(await getDatabasesPath(), 'product_database.db'),
+
+    onCreate: (db, version) {
+      return db.execute(
+        'CREATE TABLE products(productId INTEGER PRIMARY KEY, productNumber INTEGER, productNameBold TEXT, productNameThin TEXT, producerName TEXT, alcoholPercentage DOUBLE, volume DOUBLE, price DOUBLE, country TEXT, categoryLevel1 TEXT, categoryLevel2 TEXT, categoryLevel3 TEXT, categoryLevel4 TEXT, apk DOUBLE)),',
+      );
+    },
+
+    version: 1,
+  );
+
+  toProducts(List<Map<String, dynamic>> maps) {
+    return List.generate(maps.length, (i) {
+      return Product(
+        productId: maps[i]['productId'],
+        productNumber: maps[i]['productNumber'],
+        productNameBold: maps[i]['producerNameBold'],
+        productNameThin: maps[i]['producerNameThin'],
+        producerName: maps[i]['producerName'],
+        alcoholPercentage: maps[i]['alcoholPercentage'],
+        volume: maps[i]['volume'],
+        price: maps[i]['price'],
+        country: maps[i]['country'],
+        categoryLevel1: maps[i]['categoryLevel1'],
+        categoryLevel2: maps[i]['categoryLevel2'],
+        categoryLevel3: maps[i]['categoryLevel3'],
+        categoryLevel4: maps[i]['categoryLevel4'],
+        apk: maps[i]['apk'],
+      );
+    });
+  }
+
+  Future<void> insertProduct(Product product) async {
+    final db = await database;
+
+    await db.insert(
+      'products',
+      product.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  List productsArray = await fetchProducts();
+
+  for (int i = 0; i < 30; i++) {
+    insertProduct(productsArray[i]);
+  }
+
+  Future<List> getProductsSorted(String sortedParameter, bool descending) async{
+    final db = await database;
+    const  space = "";
+    var direction = (descending) ? "DESC" : "ASC";
+
+    final List<Map<String, dynamic>> maps = await db.query(
+        'products',
+        orderBy: sortedParameter + space + direction,
+      limit: 30,
+    );
+
+    return toProducts(maps);
+  }
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  static const appTitle = "APK";
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: appTitle,
+      home: MyHomePage(title: appTitle),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key, required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: Appbar(title: Text(title)),
+      body: const Center(
+        child: Text("Home Page"),
       ),
     );
   }
