@@ -6,6 +6,10 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite/utils/utils.dart';
+
+
+const darkBlue = Color(0xff0077B6);
 
 
 class Product {
@@ -178,34 +182,145 @@ void main() async{
     return toProducts(maps);
   }
 
-  runApp(const MyApp());
+  runApp(
+      MaterialApp(
+        title: 'APK',
+        home: HomeScreen();
+      ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  static const appTitle = "APK";
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: appTitle,
-      home: MyHomePage(title: appTitle),
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Appbar(title: Text(title)),
-      body: const Center(
-        child: Text("Home Page"),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: darkBlue,
+              ),
+              child: Text('Drawer Header'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
+              onTap: () {
+                Naviga
+            },
+            ),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Categories'),
+              onTap: () {
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.shopping_basket),
+              title: const Text('Shoping Lists'),
+              onTap: () {
+              },
+            ),
+        ]),
+      ),
+      appBar: AppBar(
+        title: const Text('Home'),
+      ),
+    );
+  }
+}
+
+class CategoriesScreen extends StatelessWidget {
+  const CategoriesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  color: darkBlue,
+                ),
+                child: Text('Drawer Header'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.category),
+                title: const Text('Categories'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/categories');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.shopping_basket),
+                title: const Text('Shoping Lists'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/shopping_list');
+                },
+              ),
+            ]),
+      ),
+      appBar: AppBar(
+        title: const Text('Categories'),
+      ),
+    );
+  }
+}
+
+class ShoppingListScreen extends StatelessWidget {
+  const ShoppingListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  color: darkBlue,
+                ),
+                child: Text('Drawer Header'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.category),
+                title: const Text('Categories'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/categories');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.shopping_basket),
+                title: const Text('Shoping Lists'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/shopping_list');
+                },
+              ),
+            ]),
+      ),
+      appBar: AppBar(
+        title: const Text('Shopping List'),
       ),
     );
   }
