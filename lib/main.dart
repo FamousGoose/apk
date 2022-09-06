@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -7,9 +6,8 @@ import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
-
-
-const darkBlue = Color(0xff0077B6);
+import 'package:alkohol_per_krona/components/body.dart';
+import 'package:alkohol_per_krona/constants.dart';
 
 
 class Product {
@@ -116,6 +114,80 @@ Future<List> fetchProducts() async {
   }
 }
 
+toProducts(Map<String, dynamic> map) {
+    return Product(
+      productId: map['productId'],
+      productNumber: map['productNumber'],
+      productNameBold: map['producerNameBold'],
+      productNameThin: map['producerNameThin'],
+      producerName: map['producerName'],
+      alcoholPercentage: maps['alcoholPercentage'],
+      volume: maps[i]['volume'],
+      price: maps[i]['price'],
+      country: maps[i]['country'],
+      categoryLevel1: maps[i]['categoryLevel1'],
+      categoryLevel2: maps[i]['categoryLevel2'],
+      categoryLevel3: maps[i]['categoryLevel3'],
+      categoryLevel4: maps[i]['categoryLevel4'],
+      apk: maps[i]['apk'],
+    );
+  });
+}
+
+toProducts(List<Map<String, dynamic>> maps) {
+  return List.generate(maps.length, (i) {
+    return Product(
+      productId: maps[i]['productId'],
+      productNumber: maps[i]['productNumber'],
+      productNameBold: maps[i]['producerNameBold'],
+      productNameThin: maps[i]['producerNameThin'],
+      producerName: maps[i]['producerName'],
+      alcoholPercentage: maps[i]['alcoholPercentage'],
+      volume: maps[i]['volume'],
+      price: maps[i]['price'],
+      country: maps[i]['country'],
+      categoryLevel1: maps[i]['categoryLevel1'],
+      categoryLevel2: maps[i]['categoryLevel2'],
+      categoryLevel3: maps[i]['categoryLevel3'],
+      categoryLevel4: maps[i]['categoryLevel4'],
+      apk: maps[i]['apk'],
+    );
+  });
+}
+
+Future<void> insertProduct(Product product, Future<Database> database) async {
+  final db = await database;
+
+  await db.insert(
+    'products',
+    product.toMap(),
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+}
+
+Future<List> getProductsSorted(String sortedParameter, bool descending, Future<Database> database) async{
+  final db = await database;
+  const  space = "";
+  var direction = (descending) ? "DESC" : "ASC";
+
+  final List<Map<String, dynamic>> maps = await db.query(
+    'products',
+    orderBy: sortedParameter + space + direction,
+    limit: 30,
+  );
+
+  return toProducts(maps);
+}
+
+Future<List> doesDatabaseExist(Future<Database> database) async{
+  final db = await database;
+
+  stderr.writeln("TEST TEST2");
+  stderr.writeln(db.query('products', limit: 1));
+
+  return [];
+}
+
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -123,71 +195,36 @@ void main() async{
     join(await getDatabasesPath(), 'product_database.db'),
 
     onCreate: (db, version) {
-      return db.execute(
-        'CREATE TABLE products(productId INTEGER PRIMARY KEY, productNumber INTEGER, productNameBold TEXT, productNameThin TEXT, producerName TEXT, alcoholPercentage DOUBLE, volume DOUBLE, price DOUBLE, country TEXT, categoryLevel1 TEXT, categoryLevel2 TEXT, categoryLevel3 TEXT, categoryLevel4 TEXT, apk DOUBLE)),',
-      );
+      return db.execute('CREATE TABLE products(productId INTEGER PRIMARY KEY, productNumber INTEGER, productNameBold TEXT, productNameThin TEXT, producerName TEXT, alcoholPercentage DOUBLE, volume DOUBLE, price DOUBLE, country TEXT, categoryLevel1 TEXT, categoryLevel2 TEXT, categoryLevel3 TEXT, categoryLevel4 TEXT, apk DOUBLE)');
     },
 
     version: 1,
   );
 
-  toProducts(List<Map<String, dynamic>> maps) {
-    return List.generate(maps.length, (i) {
-      return Product(
-        productId: maps[i]['productId'],
-        productNumber: maps[i]['productNumber'],
-        productNameBold: maps[i]['producerNameBold'],
-        productNameThin: maps[i]['producerNameThin'],
-        producerName: maps[i]['producerName'],
-        alcoholPercentage: maps[i]['alcoholPercentage'],
-        volume: maps[i]['volume'],
-        price: maps[i]['price'],
-        country: maps[i]['country'],
-        categoryLevel1: maps[i]['categoryLevel1'],
-        categoryLevel2: maps[i]['categoryLevel2'],
-        categoryLevel3: maps[i]['categoryLevel3'],
-        categoryLevel4: maps[i]['categoryLevel4'],
-        apk: maps[i]['apk'],
-      );
-    });
-  }
-
-  Future<void> insertProduct(Product product) async {
-    final db = await database;
-
-    await db.insert(
-      'products',
-      product.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
+  /*
   List productsArray = await fetchProducts();
 
   for (int i = 0; i < 30; i++) {
-    insertProduct(productsArray[i]);
+    insertProduct(productsArray[i], database);
   }
+  */
+  stderr.writeln("TEST TEST");
+  doesDatabaseExist(database);
 
-  Future<List> getProductsSorted(String sortedParameter, bool descending) async{
-    final db = await database;
-    const  space = "";
-    var direction = (descending) ? "DESC" : "ASC";
 
-    final List<Map<String, dynamic>> maps = await db.query(
-        'products',
-        orderBy: sortedParameter + space + direction,
-      limit: 30,
+  runApp(App());
+}
+
+class App extends StatelessWidget {
+  App({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+          home: HomeScreen(),
     );
-
-    return toProducts(maps);
   }
 
-  runApp(
-      MaterialApp(
-        title: 'APK',
-        home: HomeScreen();
-      ),
-  );
 }
 
 class HomeScreen extends StatelessWidget {
@@ -198,38 +235,55 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       drawer: Drawer(
         child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: darkBlue,
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  color: veryDarkBlue,
+                ),
+                child: Text('Drawer Header'),
               ),
-              child: Text('Drawer Header'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () {
-                Naviga
-            },
-            ),
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Categories'),
-              onTap: () {
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.shopping_basket),
-              title: const Text('Shoping Lists'),
-              onTap: () {
-              },
-            ),
-        ]),
+              ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text('Home'),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => App()));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.category),
+                title: const Text('Categories'),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => CategoriesScreen()));
+
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.shopping_basket),
+                title: const Text('Shoping Lists'),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ShoppingListScreen()));
+                },
+              ),
+            ]),
       ),
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
+      appBar: buildAppBar(),
+      body: Body(),
+
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      backgroundColor: darkBlue,
+      elevation: 0,
+      actions: <Widget>[
+        IconButton(
+        icon: Icon(Icons.search),
+        onPressed: () {},
+        ),
+        SizedBox(width: defaultPadding / 2)
+      ],
     );
   }
 }
@@ -246,7 +300,7 @@ class CategoriesScreen extends StatelessWidget {
             children: [
               const DrawerHeader(
                 decoration: BoxDecoration(
-                  color: darkBlue,
+                  color: veryDarkBlue,
                 ),
                 child: Text('Drawer Header'),
               ),
@@ -254,21 +308,22 @@ class CategoriesScreen extends StatelessWidget {
                 leading: const Icon(Icons.home),
                 title: const Text('Home'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/');
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => App()));
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.category),
                 title: const Text('Categories'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/categories');
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => CategoriesScreen()));
+
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.shopping_basket),
                 title: const Text('Shoping Lists'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/shopping_list');
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ShoppingListScreen()));
                 },
               ),
             ]),
@@ -292,7 +347,7 @@ class ShoppingListScreen extends StatelessWidget {
             children: [
               const DrawerHeader(
                 decoration: BoxDecoration(
-                  color: darkBlue,
+                  color: veryDarkBlue,
                 ),
                 child: Text('Drawer Header'),
               ),
@@ -300,21 +355,22 @@ class ShoppingListScreen extends StatelessWidget {
                 leading: const Icon(Icons.home),
                 title: const Text('Home'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/');
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => App()));
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.category),
                 title: const Text('Categories'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/categories');
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => CategoriesScreen()));
+
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.shopping_basket),
                 title: const Text('Shoping Lists'),
                 onTap: () {
-                  Navigator.pushNamed(context, '/shopping_list');
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ShoppingListScreen()));
                 },
               ),
             ]),
