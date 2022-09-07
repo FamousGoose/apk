@@ -10,13 +10,14 @@ class Body extends StatelessWidget {
         Expanded(
           child: GridView.builder(
             itemCount: 30,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: defaultPadding,
-                crossAxisSpacing: defaultPadding,
-                childAspectRatio: 0.75,
-              ),
-          itemBuilder: (context, index) => ItemCard()
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: defaultPadding,
+              crossAxisSpacing: defaultPadding,
+              childAspectRatio: 0.75,
+            ),
+            itemBuilder: (context, index) =>
+                ItemCard(product: productCache![index]),
           ),
         ),
       ],
@@ -25,8 +26,9 @@ class Body extends StatelessWidget {
 }
 
 class ItemCard extends StatelessWidget {
+  final Product product;
   const ItemCard({
-    Key? key,
+    Key? key, required this.product,
   }) : super(key: key);
 
   @override
@@ -46,13 +48,10 @@ class ItemCard extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: defaultPadding / 4),
-          child: Text(
-              "Title",
-              style: TextStyle(color: textColor)
-          ),
+          child: Text(product.productNameBold, style: TextStyle(color: textColor)),
         ),
         Text(
-          "\$234",
+          "${product.price} kr",
           style: TextStyle(fontWeight: FontWeight.bold),
         )
       ],
