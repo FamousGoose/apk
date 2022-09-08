@@ -9,7 +9,8 @@ import 'package:sqflite/utils/utils.dart';
 import 'package:alkohol_per_krona/components/body.dart';
 import 'package:alkohol_per_krona/constants.dart';
 
-List? productCache;
+Future<Database>? database;
+Future<List<Product>>? productCache;
 
 class Product {
   final int productId;
@@ -143,7 +144,7 @@ Future<List> fetchProducts() async {
   }
 }
 
-toProduct(Map<String, dynamic> map) {
+Product toProduct(Map<String, dynamic> map) {
   return Product(
     productId: map['productId'],
     productNumber: map['productNumber'],
@@ -162,7 +163,7 @@ toProduct(Map<String, dynamic> map) {
   );
 }
 
-toProducts(List<Map<String, dynamic>> maps) {
+List<Product> toProducts(List<Map<String, dynamic>> maps) {
   return List.generate(maps.length, (i) {
     return toProduct(maps[i]);
   });
@@ -178,7 +179,7 @@ Future<void> insertProduct(Product product, Future<Database> database) async {
   );
 }
 
-Future<List> getProductsSorted(
+Future<List<Product>> getProductsSorted(
     String sortedParameter, bool descending, Future<Database> database) async {
   final db = await database;
   const space = " ";
@@ -217,7 +218,13 @@ Future<void> setUpDatabase(Future<Database> database) async {
   }
 }
 
-Future<List> loadProductCache(Future<Database> database) async {
+Future<List<Product>> loadProductCache(Future<Database> database) async {
+  for (var value in await getProductsSorted("productId", false, database)) {
+    stderr.writeln(value.productId);
+  }
+
+  stderr.writeln(value.);
+
   return getProductsSorted("productId", false, database);
 }
 
@@ -234,10 +241,13 @@ void main() async {
   );
 
   if (await doesDatabaseExist(database)) {
-    productCache = await loadProductCache(database);
+    setUpDatabase(database);
+    productCache = loadProductCache(database);
   } else {
     setUpDatabase(database);
-    productCache = await loadProductCache(database);
+    productCache = loadProductCache(database);
+
+
   }
 
   runApp(App());
