@@ -8,6 +8,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/utils/utils.dart';
 import 'package:alkohol_per_krona/components/body.dart';
 import 'package:alkohol_per_krona/constants.dart';
+import 'dart:developer' as developer;
 
 Future<Database>? database;
 Future<List<Product>>? productCache;
@@ -148,8 +149,8 @@ Product toProduct(Map<String, dynamic> map) {
   return Product(
     productId: map['productId'],
     productNumber: map['productNumber'],
-    productNameBold: map['producerNameBold'],
-    productNameThin: map['producerNameThin'],
+    productNameBold: map['productNameBold'],
+    productNameThin: map['productNameThin'],
     producerName: map['producerName'],
     alcoholPercentage: map['alcoholPercentage'],
     volume: map['volume'],
@@ -164,9 +165,14 @@ Product toProduct(Map<String, dynamic> map) {
 }
 
 List<Product> toProducts(List<Map<String, dynamic>> maps) {
-  return List.generate(maps.length, (i) {
+  List<Product>list = List.generate(maps.length, (i) {
+    //developer.log(i.toString(), name: "INDEX");
+    //developer.log(maps[0]["productId"].toString(), name: "INDEX");
+
     return toProduct(maps[i]);
   });
+
+  return list;
 }
 
 Future<void> insertProduct(Product product, Future<Database> database) async {
@@ -179,8 +185,7 @@ Future<void> insertProduct(Product product, Future<Database> database) async {
   );
 }
 
-Future<List<Product>> getProductsSorted(
-    String sortedParameter, bool descending, Future<Database> database) async {
+Future<List<Product>> getProductsSorted(String sortedParameter, bool descending, Future<Database> database) async {
   final db = await database;
   const space = " ";
   var direction = (descending) ? "DESC" : "ASC";
@@ -213,19 +218,17 @@ Future<void> deleteAllProducts(Future<Database> database) async {
 Future<void> setUpDatabase(Future<Database> database) async {
   List productsArray = await fetchProducts();
 
+  //developer.log(productsArray.toString(), name: "THEO DEBUGGER");
+
   for (int i = 0; i < 30; i++) {
     insertProduct(productsArray[i], database);
   }
 }
 
 Future<List<Product>> loadProductCache(Future<Database> database) async {
-  for (var value in await getProductsSorted("productId", false, database)) {
-    stderr.writeln(value.productId);
-  }
+  Future<List<Product>> productCache = getProductsSorted("productId", false, database);
 
-  stderr.writeln(value.);
-
-  return getProductsSorted("productId", false, database);
+  return productCache;
 }
 
 void main() async {
@@ -240,14 +243,18 @@ void main() async {
     version: 1,
   );
 
+  //setUpDatabase(database);
+  //List<Product> products = await getProductsSorted("productId", false, database);
+
+  //developer.log(productCache.toString(), name: "THEO DEBUGGER");
+
+
   if (await doesDatabaseExist(database)) {
     setUpDatabase(database);
     productCache = loadProductCache(database);
   } else {
     setUpDatabase(database);
     productCache = loadProductCache(database);
-
-
   }
 
   runApp(App());
