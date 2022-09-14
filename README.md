@@ -1,16 +1,10 @@
 # alkohol_per_krona
 
-A new Flutter project.
+A mobile application to offer users the ability to view products from Systembolaget sorted by APK (alocohl per krona).
 
-## Getting Started
+## Inspiration
 
-This project is a starting point for a Flutter application.
+This project was inspired by similair projects:
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- [Alkolist](https://alkolist.github.io/)
+- [ÁPK](https://alkoholperkrona.nu/)
