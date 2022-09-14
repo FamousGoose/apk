@@ -7,4 +7,4 @@ A mobile application to offer users the ability to view products from Systembola
 This project was inspired by similair projects:
 
 - [Alkolist](https://alkolist.github.io/)
-- [ÁPK](https://alkoholperkrona.nu/)
+- [APK](https://alkoholperkrona.nu/)
