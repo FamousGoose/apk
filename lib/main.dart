@@ -9,6 +9,7 @@ import 'package:sqflite/utils/utils.dart';
 import 'package:alkohol_per_krona/components/body.dart';
 import 'package:alkohol_per_krona/constants.dart';
 import 'dart:developer' as developer;
+import 'package:image_downloader/image_downloader.dart';
 
 Future<Database>? database;
 Future<List<Product>>? productCache;
@@ -28,6 +29,7 @@ class Product {
   final String categoryLevel3;
   final String categoryLevel4;
   final double apk;
+  final String imageUrl;
 
   const Product({
     required this.productId,
@@ -44,6 +46,7 @@ class Product {
     required this.categoryLevel3,
     required this.categoryLevel4,
     required this.apk,
+    required this.imageUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -62,12 +65,13 @@ class Product {
       'categoryLevel3': categoryLevel3,
       'categoryLevel4': categoryLevel4,
       'apk': apk,
+      'imageUrl': imageUrl,
     };
   }
 
   @override
   String toString() {
-    return 'Product{productI: $productId, productNumber: $productNumber, productNameBold: $productNameBold, productNameThin: $productNameThin, producerName: $producerName, alcoholPercentage: $alcoholPercentage, volume: $volume, price: $price, country: $country, categoryLevel1: $categoryLevel1, categoryLevel2: $categoryLevel2, categoryLevel3: $categoryLevel3, categoryLevel4: $categoryLevel4, apk: $apk}';
+    return 'Product{productI: $productId, productNumber: $productNumber, productNameBold: $productNameBold, productNameThin: $productNameThin, producerName: $producerName, alcoholPercentage: $alcoholPercentage, volume: $volume, price: $price, country: $country, categoryLevel1: $categoryLevel1, categoryLevel2: $categoryLevel2, categoryLevel3: $categoryLevel3, categoryLevel4: $categoryLevel4, apk: $apk, imageUrl: $imageUrl}';
   }
 }
 
@@ -81,10 +85,12 @@ Future<List> fetchProducts() async {
   );
 
   if (response.statusCode == 200) {
-    var productArray = [];
+    var productList = [];
     final body = jsonDecode(response.body);
+    //developer.log(body["products"].length.toString(), name: "JSON");
 
     for (var i = 0; i < 30; i++) {
+      //developer.log("i: $i, Length: ${body["products"][i]["images"].length}"); //, isNull?: ${body["products"][i]["images"][0]["imageUrl"] == null}", name: "imageUrl
       Product product = Product(
         productId: (body["products"][i]["productId"] == null)
             ? 0
@@ -132,12 +138,18 @@ Future<List> fetchProducts() async {
             : body["products"][i]["volume"] *
                 body["products"][i]["alcoholPercentage"] /
                 (body["products"][i]["price"] * 100),
+        imageUrl: (body["products"][i]["images"].length == 0)
+            ? ""
+            : (body["products"][i]["images"][0]["imageUrl"] == null)
+                ? ""
+                : body["products"][i]["images"][0]["imageUrl"] + "_400.png",
       );
 
-      productArray.add(product);
+      productList.add(product);
     }
+    //developer.log(productList[6].imageUrl.toString(), name: "No image");
 
-    return productArray;
+    return productList;
   } else {
     // If the server did not return a 200 OK response,
     // then throw an exception.
@@ -147,25 +159,25 @@ Future<List> fetchProducts() async {
 
 Product toProduct(Map<String, dynamic> map) {
   return Product(
-    productId: map['productId'],
-    productNumber: map['productNumber'],
-    productNameBold: map['productNameBold'],
-    productNameThin: map['productNameThin'],
-    producerName: map['producerName'],
-    alcoholPercentage: map['alcoholPercentage'],
-    volume: map['volume'],
-    price: map['price'],
-    country: map['country'],
-    categoryLevel1: map['categoryLevel1'],
-    categoryLevel2: map['categoryLevel2'],
-    categoryLevel3: map['categoryLevel3'],
-    categoryLevel4: map['categoryLevel4'],
-    apk: map['apk'],
-  );
+      productId: map['productId'],
+      productNumber: map['productNumber'],
+      productNameBold: map['productNameBold'],
+      productNameThin: map['productNameThin'],
+      producerName: map['producerName'],
+      alcoholPercentage: map['alcoholPercentage'],
+      volume: map['volume'],
+      price: map['price'],
+      country: map['country'],
+      categoryLevel1: map['categoryLevel1'],
+      categoryLevel2: map['categoryLevel2'],
+      categoryLevel3: map['categoryLevel3'],
+      categoryLevel4: map['categoryLevel4'],
+      apk: map['apk'],
+      imageUrl: map['imageUrl']);
 }
 
 List<Product> toProducts(List<Map<String, dynamic>> maps) {
-  List<Product>list = List.generate(maps.length, (i) {
+  List<Product> list = List.generate(maps.length, (i) {
     //developer.log(i.toString(), name: "INDEX");
     //developer.log(maps[0]["productId"].toString(), name: "INDEX");
 
@@ -185,7 +197,8 @@ Future<void> insertProduct(Product product, Future<Database> database) async {
   );
 }
 
-Future<List<Product>> getProductsSorted(String sortedParameter, bool descending, Future<Database> database) async {
+Future<List<Product>> getProductsSorted(
+    String sortedParameter, bool descending, Future<Database> database) async {
   final db = await database;
   const space = " ";
   var direction = (descending) ? "DESC" : "ASC";
@@ -226,7 +239,8 @@ Future<void> setUpDatabase(Future<Database> database) async {
 }
 
 Future<List<Product>> loadProductCache(Future<Database> database) async {
-  Future<List<Product>> productCache = getProductsSorted("productId", false, database);
+  Future<List<Product>> productCache =
+      getProductsSorted("productId", false, database);
 
   return productCache;
 }
@@ -238,9 +252,25 @@ void main() async {
     join(await getDatabasesPath(), 'product_database.db'),
     onCreate: (db, version) {
       return db.execute(
-          'CREATE TABLE products(productId INTEGER PRIMARY KEY, productNumber INTEGER, productNameBold TEXT, productNameThin TEXT, producerName TEXT, alcoholPercentage DOUBLE, volume DOUBLE, price DOUBLE, country TEXT, categoryLevel1 TEXT, categoryLevel2 TEXT, categoryLevel3 TEXT, categoryLevel4 TEXT, apk DOUBLE)');
+          'CREATE TABLE products('
+              'productId INTEGER PRIMARY KEY, '
+              'productNumber INTEGER, '
+              'productNameBold TEXT, '
+              'productNameThin TEXT, '
+              'producerName TEXT, '
+              'alcoholPercentage DOUBLE, '
+              'volume DOUBLE, '
+              'price DOUBLE, '
+              'country TEXT, '
+              'categoryLevel1 TEXT, '
+              'categoryLevel2 TEXT, '
+              'categoryLevel3 TEXT, '
+              'categoryLevel4 TEXT, '
+              'apk DOUBLE, '
+              'imageUrl TEXT)'
+      );
     },
-    version: 1,
+    version: 5,
   );
 
   //setUpDatabase(database);
@@ -249,8 +279,8 @@ void main() async {
   //developer.log(productCache.toString(), name: "THEO DEBUGGER");
 
 
+
   if (await doesDatabaseExist(database)) {
-    setUpDatabase(database);
     productCache = loadProductCache(database);
   } else {
     setUpDatabase(database);
@@ -276,7 +306,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return            Scaffold(
       drawer: Drawer(
         child: ListView(children: [
           const DrawerHeader(

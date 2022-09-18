@@ -8,107 +8,92 @@ class Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+
     return SizedBox(
       child: FutureBuilder<List<Product>?>(
-          future: productCache, // a previously-obtained Future<String> or null
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            List<Widget> children;
-            if (snapshot.hasData) {
-              return ListView.builder(
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        return ItemCard(product: snapshot.data?[index]);
-                      },
-                    );
-            } else if (snapshot.hasError) {
-              //developer.log(snapshot.data!.toString(), name: "THEO DEBUGGER");
-              children = <Widget>[
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 60,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Text('Error: ${snapshot.error}'),
-                ),
-              ];
-            } else {
-              children = const <Widget>[
-                SizedBox(
-                  width: 60,
-                  height: 60,
-                  child: CircularProgressIndicator(),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 16),
-                  child: Text('Awaiting result...'),
-                ),
-              ];
-            }
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: children,
-              ),
+        future: productCache, // a previously-obtained Future<String> or null
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          List<Widget> children;
+          if (snapshot.hasData) {
+            return GridView.count(
+              // crossAxisCount is the number of columns
+              crossAxisCount: 2,
+              // This creates two columns with two items in each column
+              children: List.generate(snapshot.data!.length, (index) {
+                return ItemCard(product: snapshot.data?[index]);
+              }),
             );
-          },
-        ),
+          } else if (snapshot.hasError) {
+            children = <Widget>[
+              const Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 60,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text('Error: ${snapshot.error}'),
+              ),
+            ];
+          } else {
+            children = const <Widget>[
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Text('Awaiting result...'),
+              ),
+            ];
+          }
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: children,
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-/*
-Column(
-children: <Widget>[
-Expanded(
-child: GridView.builder(
-itemCount: 30,
-gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-crossAxisCount: 2,
-mainAxisSpacing: defaultPadding,
-crossAxisSpacing: defaultPadding,
-childAspectRatio: 0.75,
-),
-itemBuilder: (context, index) =>
-ItemCard(product: productCache![index]),
-),
-),
-],
-);
-*/
-
 class ItemCard extends StatelessWidget {
   final Product product;
   const ItemCard({
-    Key? key, required this.product,
+    Key? key,
+    required this.product,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Padding(padding: EdgeInsets.symmetric(vertical: 5, horizontal: 5)),
         Container(
-          padding: EdgeInsets.all(defaultPadding),
-          //height: 180,
-          //width: 160,
-          decoration: BoxDecoration(
-            color: blue,
-            borderRadius: BorderRadius.circular(16),
+          child: Expanded(
+            child: (product.imageUrl != "")
+                ? Image.network(product.imageUrl, fit: BoxFit.contain)
+                : Image.asset(
+                    "assets/product_images/placeholder-wine-bottle.png",
+                    fit: BoxFit.contain,
+                  ), //
           ),
-          //child; Image.asset()
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: defaultPadding / 4),
-          child: Text(product.productNameBold, style: TextStyle(color: textColor)),
+          padding: const EdgeInsets.fromLTRB(0, 10, 0, 5),
+          child: Text(product.productNameBold,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: textColor)),
         ),
         Text(
           "${product.price} kr",
           style: TextStyle(fontWeight: FontWeight.bold),
-        )
+        ),
       ],
     );
   }
