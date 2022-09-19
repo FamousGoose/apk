@@ -1,18 +1,16 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite/utils/utils.dart';
 import 'package:alkohol_per_krona/components/body.dart';
 import 'package:alkohol_per_krona/constants.dart';
 import 'dart:developer' as developer;
-import 'package:image_downloader/image_downloader.dart';
 
 Future<Database>? database;
 Future<List<Product>>? productCache;
+String? searchQuery;
 
 class Product {
   final int productId;
@@ -342,22 +340,88 @@ class HomeScreen extends StatelessWidget {
           ),
         ]),
       ),
-      appBar: buildAppBar(),
+      appBar: buildAppBar(context),
       body: Body(),
     );
   }
 
-  AppBar buildAppBar() {
+  AppBar buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: darkBlue,
       elevation: 0,
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.search),
-          onPressed: () {},
+          onPressed: () {
+            showSearch(
+                // delegate to customize the search bar
+                context: context,
+                delegate: CustomSearchDelegate()
+            );
+            searchQuery = CustomSearchDelegate().query;
+            developer.log($searchQuery, name: "SearchQuery");
+          },
         ),
         SizedBox(width: defaultPadding / 2)
       ],
+    );
+  }
+}
+
+class CustomSearchDelegate extends SearchDelegate {
+  // Demo list to show querying
+  List<String> searchTerms = [];
+
+  // first overwrite to
+  // clear the search text
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      IconButton(
+        onPressed: () {
+          query = '';
+        },
+        icon: Icon(Icons.clear),
+      ),
+    ];
+  }
+
+  // second overwrite to pop out of search menu
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      onPressed: () {
+        close(context, null);
+      },
+      icon: Icon(Icons.arrow_back),
+    );
+  }
+
+  // third overwrite to show query result
+  @override
+  Widget buildResults(BuildContext context) {
+    close(context, query);
+    return ListTile(title: Text("placeholder"));
+  }
+
+  // last overwrite to show the
+  // querying process at the runtime
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    List<String> matchQuery = [];
+    for (var fruit in searchTerms) {
+      if (fruit.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(fruit);
+      }
+    }
+    return ListView.builder(
+      itemCount: matchQuery.length,
+      itemBuilder: (context, index) {
+        var result = matchQuery[index];
+        return ListTile(
+          title: Text(result),
+        );
+      },
     );
   }
 }
