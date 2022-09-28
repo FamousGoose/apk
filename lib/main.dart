@@ -352,14 +352,13 @@ class HomeScreen extends StatelessWidget {
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.search),
-          onPressed: () {
-            showSearch(
+          onPressed: () async {
+            searchQuery = await showSearch<String>(
                 // delegate to customize the search bar
                 context: context,
                 delegate: CustomSearchDelegate()
             );
-            searchQuery = CustomSearchDelegate().query;
-            developer.log($searchQuery, name: "SearchQuery");
+            developer.log(searchQuery!, name: "searchQuery");
           },
         ),
         SizedBox(width: defaultPadding / 2)
@@ -368,9 +367,18 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class CustomSearchDelegate extends SearchDelegate {
+class CustomSearchDelegate extends SearchDelegate<String> {
   // Demo list to show querying
-  List<String> searchTerms = [];
+  List<String> searchTerms = [
+    "Apple",
+    "Banana",
+    "Mango",
+    "Pear",
+    "Watermelons",
+    "Blueberries",
+    "Pineapples",
+    "Strawberries"
+  ];
 
   // first overwrite to
   // clear the search text
@@ -391,7 +399,7 @@ class CustomSearchDelegate extends SearchDelegate {
   Widget? buildLeading(BuildContext context) {
     return IconButton(
       onPressed: () {
-        close(context, null);
+        close(context, query);
       },
       icon: Icon(Icons.arrow_back),
     );
@@ -400,8 +408,22 @@ class CustomSearchDelegate extends SearchDelegate {
   // third overwrite to show query result
   @override
   Widget buildResults(BuildContext context) {
-    close(context, query);
-    return ListTile(title: Text("placeholder"));
+    List<String> matchQuery = [];
+    for (var fruit in searchTerms) {
+      if (fruit.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(fruit);
+      }
+    }
+
+    return ListView.builder(
+      itemCount: matchQuery.length,
+      itemBuilder: (context, index) {
+        var result = matchQuery[index];
+        return ListTile(
+          title: Text(result),
+        );
+      },
+    );
   }
 
   // last overwrite to show the
@@ -414,15 +436,21 @@ class CustomSearchDelegate extends SearchDelegate {
         matchQuery.add(fruit);
       }
     }
+
     return ListView.builder(
       itemCount: matchQuery.length,
       itemBuilder: (context, index) {
         var result = matchQuery[index];
         return ListTile(
           title: Text(result),
+          onTap: () {
+            query = result;
+            close(context, query);
+          },
         );
       },
     );
+
   }
 }
 
